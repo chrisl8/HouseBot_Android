@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>HouseBot</title>
+	<link rel="stylesheet" type="text/css" href="lcars.css" />
+	<script type="text/javascript" src="jquery-2.1.1.min.js"></script>
+	<link href="jquery-ui-1.10.4.custom.min.css" rel="stylesheet">
+	<script src="jquery-ui-1.10.4.custom.min.js"></script>
+  <script type="text/javascript" src="lcars.js"></script>
+	<script type="text/javascript">
+    var connectRequested = false;
+    var connectedToNXT = false;
+    var connectButtonHovered = false;
+    var initialTravelSpeed = 0;
+    var initialRotateSpeed = 0;
+	$(function(){
+		$('a.info').lcarsButton({
+			color: 'blue',
+			extended: true
+		});
+		$('a.mark').lcarsButton({
+			color: 'white',
+			extended: true
+		});
+		$('a.download').lcarsButton({
+			color: 'tan',
+			extended: true,
+			subTitle: {
+				direction: 'right',
+				text: 'KB'
+			}
+		})
+		$('a.download').hover(function(){
+			$(this).find('span').text('161');
+		},
+		function(){
+			$(this).find('span').text('KB');
+		});
+		$('a.help').lcarsButton({
+			color: 'blue',
+			extended: true
+		});
+
+    $('a.forwardButton').lcarsButton({
+	rounded: 'both', // accepts both, left, right, none
+	extended: true, // this is true or false
+	color: 'lightBlue',
+	subTitle: { // The sub title for your button
+		direction: 'left', // left or right
+		text: '<sub>&#9650;</sub>' // the text for the sub title
+	},
+	blank: 'none', // blank button? left / right / none
+    });
+    $('a.forwardButton').hover(function(){
+			$(this).find('span').html('<sup>&#9650;</sup>');
+		},
+		function(){
+			$(this).find('span').html("<sub>&#9650;</sub>");
+		});
+    // http://stackoverflow.com/questions/3303469/does-mousedown-mouseup-in-jquery-work-for-the-ipad
+    $('a.forwardButton').on("mousedown touchstart", function(){
+            $(this).css('background-color','#000088');
+            });
+    $('a.forwardButton').on ("mouseup mouseout touchend", function(){
+            $(this).css('background-color','#5599FF');
+            });
+
+    $('a.leftButton').lcarsButton({
+	rounded: 'left', // accepts both, left, right, none
+	extended: true, // this is true or false
+	color: 'lightBlue',
+	subTitle: { // The sub title for your button
+		direction: 'left', // left or right
+		text: '-<' // the text for the sub title
+	},
+	blank: 'none', // blank button? left / right / none
+    });
+    $('a.leftButton').hover(function(){
+			$(this).find('span').html('<-');
+		},
+		function(){
+			$(this).find('span').html("-<");
+		});
+    $('a.leftButton').on("mousedown touchstart", function(){
+            $(this).css('background-color','#000088');
+            });
+    $('a.leftButton').on("mouseup mouseout touchend", function(){
+            $(this).css('background-color','#5599FF');
+            });
+
+    $('a.stopButton').lcarsButton({
+	rounded: 'none', // accepts both, left, right, none
+	extended: true, // this is true or false
+	color: 'tan',
+	subTitle: { // The sub title for your button
+		direction: 'left', // left or right
+		text: '----' // the text for the sub title
+	},
+	blank: 'none', // blank button? left / right / none
+    });
+    $('a.stopButton').hover(function(){
+			$(this).find('span').text('|');
+		},
+		function(){
+			$(this).find('span').text("----");
+		});
+    $('a.stopButton').on("mousedown touchstart", function(){
+            $(this).css('background-color','#882211');
+            });
+    $('a.stopButton').on("mouseup mouseout touchend", function(){
+            $(this).css('background-color','#BBAA55');
+            });
+
+    $('a.rightButton').lcarsButton({
+	rounded: 'right', // accepts both, left, right, none
+	extended: true, // this is true or false
+	color: 'lightBlue',
+	subTitle: { // The sub title for your button
+		direction: 'right', // left or right
+		text: '>-' // the text for the sub title
+	},
+	blank: 'none', // blank button? left / right / none
+    });
+    $('a.rightButton').hover(function(){
+			$(this).find('span').html('->');
+		},
+		function(){
+			$(this).find('span').html(">-");
+		});
+    $('a.rightButton').on("mousedown touchstart", function(){
+            $(this).css('background-color','#000088');
+            });
+    $('a.rightButton').on ("mouseup mouseout touchend", function(){
+            $(this).css('background-color','#5599FF');
+            });
+
+    $('a.reverseButton').lcarsButton({
+	rounded: 'both', // accepts both, left, right, none
+	extended: true, // this is true or false
+	color: 'lightBlue',
+	subTitle: { // The sub title for your button
+		direction: 'left', // left or right
+		text: '<sup>&#9660;</sup>' // the text for the sub title
+	},
+	blank: 'none', // blank button? left / right / none
+    });
+    $('a.reverseButton').hover(function(){
+			$(this).find('span').html('<sub>&#9660;</sub>');
+		},
+		function(){
+			$(this).find('span').html("<sup>&#9660;</sup>");
+		});
+    $('a.reverseButton').on("mousedown touchstart", function(){
+            $(this).css('background-color','#000088');
+            });
+    $('a.reverseButton').on("mouseup mouseout touchend", function(){
+            $(this).css('background-color','#5599FF');
+            });
+});
+	function highlight(id){
+		if($(id).hasClass('highlight-inner')){
+			$(id).removeClass('highlight-inner').unwrap();
+		}else{
+			$(id).addClass('highlight-inner').wrap('<div class="highlight"></div>');
+			setTimeout("highlight('"+id+"')", 2000);
+		}
+	}
+
+    var refreshInterval = 999999; // Default high
+
+    $(document).ready(function() {
+                getConfig();
+				pollStatus();
+				$("a.forwardButton").on("mousedown touchstart", function() {
+					$.get('FORWARD', function(data) {
+						$("#response").html(data);
+					});
+				});
+				$("a.forwardButton").on("mouseup mouseout touchend", function() {
+					$.get('STOP', function(data) {
+						$("#response").html(data);
+					});
+				});
+
+				$("a.leftButton").on("mousedown touchstart", function() {
+					$.get('LEFT', function(data) {
+						$("#response").html(data);
+					});
+				});
+				$("a.leftButton").on("mouseup mouseout touchend", function() {
+					$.get('STOP', function(data) {
+						$("#response").html(data);
+					});
+				});
+
+				$("a.rightButton").on("mousedown touchstart", function() {
+					$.get('RIGHT', function(data) {
+						$("#response").html(data);
+					});
+				});
+				$("a.rightButton").on ("mouseup mouseout touchend", function() {
+					$.get('STOP', function(data) {
+						$("#response").html(data);
+					});
+				});
+
+				$("a.reverseButton").on("mousedown touchstart", function() {
+					$.get('REVERSE', function(data) {
+						$("#response").html(data);
+					});
+				});
+				$("a.reverseButton").on("mouseup mouseout touchend", function() {
+					$.get('STOP', function(data) {
+						$("#response").html(data);
+					});
+				});
+
+				$("a.stopButton").on("mousedown touchstart", function() {
+					$.get('STOP', function(data) {
+						$("#response").html(data);
+					});
+				});
+                
+                // For Online Status "Button" in Upper Side Panel
+                
+                // For Connect Button in Upper Side Panel
+				$('#connectButton-li').on("mousedown touchstart", function() {
+                    if (connectedToNXT) {
+                    $(this).removeClass( "lightUpButton" );
+                    $(this).addClass( "pressOnButton" );
+                    $.get('DISCONNECT', function(data) {
+                        $("#response").html(data);
+                    });
+                    } else if (connectRequested) {
+                    } else {
+                    $(this).removeClass( "lightUpButton" );
+                    $(this).addClass( "pressOnButton" );
+                    $.get('CONNECT', function(data) {
+                        $("#response").html(data);
+                    });
+                    }
+				});
+				$('#connectButton-li').on("mouseup mouseout touchend", function(){
+                    $(this).removeClass( "pressOnButton" );
+                });
+                
+                // This will "highlight" the buttons on the side panel upon hover,
+                // Which I think is important since the cursor change is off
+                // I am using addClass instead of setting the background-color directly,
+                // Since I don't know what it was (it is different on every other button,
+                // So I don't know what to set it back to.
+                // Note you have to use !important for the class background-color to override the element style
+            $('#connectButton-li').hover(function(){
+            connectButtonHovered = true;
+            updateConnectedButton();
+            },
+            function(){
+			$(this).removeClass( "lightUpButton" );
+            connectButtonHovered = false;
+            updateConnectedButton();
+            });
+
+// For Lower Side Panel Function Buttons
+// PING Button:
+$('#pingButton-li').on("mousedown touchstart", function() {
+    $(this).addClass( "pressOnButton" );
+    $.get('PING', function(data) {
+        $("#response").html(data);
+    });
+});
+$('#pingButton-li').on("mouseup mouseout touchend", function(){
+    $(this).removeClass( "pressOnButton" );
+});
+
+// This will "highlight" the buttons on the side panel upon hover,
+// Which I think is important since the cursor change is off
+// I am using addClass instead of setting the background-color directly,
+// Since I don't know what it was (it is different on every other button,
+// So I don't know what to set it back to.
+// Note you have to use !important for the class background-color to override the element style
+$('#pingButton-li').hover(function(){
+$(this).addClass( "lightUpButton" );
+},
+function(){
+$(this).removeClass( "lightUpButton" );
+});
+            
+// PROCEED Button:
+$('#proceedButton-li').on("mousedown touchstart", function() {
+    $(this).addClass( "pressOnButton" );
+    $.get('PROCEED', function(data) {
+        $("#response").html(data);
+    });
+});
+$('#proceedButton-li').on("mouseup mouseout touchend", function(){
+    $(this).removeClass( "pressOnButton" );
+});
+    // Highlight
+$('#proceedButton-li').hover(function(){
+$(this).addClass( "lightUpButton" );
+},
+function(){
+$(this).removeClass( "lightUpButton" );
+});
+            
+// CAMERA Button:
+$('#cameraButton-li').on("mousedown touchstart", function() {
+    $(this).addClass( "pressOnButton" );
+    $.get('CAMERA', function(data) {
+        $("#response").html(data);
+    });
+});
+$('#cameraButton-li').on("mouseup mouseout touchend", function(){
+    $(this).removeClass( "pressOnButton" );
+});
+    // Highlight
+$('#cameraButton-li').hover(function(){
+$(this).addClass( "lightUpButton" );
+},
+function(){
+$(this).removeClass( "lightUpButton" );
+});
+            
+// STAYCLOSE Button:
+$('#staycloseButton-li').on("mousedown touchstart", function() {
+    $(this).addClass( "pressOnButton" );
+    $.get('STAYCLOSE', function(data) {
+        $("#response").html(data);
+    });
+});
+$('#staycloseButton-li').on("mouseup mouseout touchend", function(){
+    $(this).removeClass( "pressOnButton" );
+});
+    // Highlight
+$('#staycloseButton-li').hover(function(){
+$(this).addClass( "lightUpButton" );
+},
+function(){
+$(this).removeClass( "lightUpButton" );
+});
+            
+// RESET Button:
+$('#resetButton-li').on("mousedown touchstart", function() {
+    $(this).addClass( "pressOnButton" );
+    $.get('RESET', function(data) {
+        $("#response").html(data);
+    });
+});
+$('#resetButton-li').on("mouseup mouseout touchend", function(){
+    $(this).removeClass( "pressOnButton" );
+});
+    // Highlight
+$('#resetButton-li').hover(function(){
+$(this).addClass( "lightUpButton" );
+},
+function(){
+$(this).removeClass( "lightUpButton" );
+});
+            
+// END                        
+			});
+            
+// Sliders:
+	$(function() {
+		$( "#travelSpeedSlider, #rotateSpeedSlider, #viewAngleSlider" ).slider({
+			orientation: "horizontal",
+			range: "min",
+			max: 100,
+			value: 50,
+			//slide: sendDataToRobot,
+			change: sendDataToRobot
+		});
+		//$( "#travelSpeedSlider" ).slider( "value", 50 );
+		//$( "#rotateSpeedSlider" ).slider( "value", 50 );
+		//$( "#viewAngleSlider" ).slider( "value", 50 );
+	});
+
+// Grab config file once from robot
+var getConfig = function() {
+    $.getJSON('config.json', function(e) {
+        refreshInterval = e.refreshInterval;
+        $('span#refreshInterval').html(refreshInterval);
+        $('span#configMode').html(e.mode);
+   		$( "#travelSpeedSlider" ).slider( "value", e.travelSpeed );
+		$( "#rotateSpeedSlider" ).slider( "value", e.rotateSpeed );
+        });
+    };
+    
+// Send data to the robot (beyond simple commands)
+var sendDataToRobot = function() {
+var travelSpeed = $( "#travelSpeedSlider" ).slider( "value" ),
+    rotateSpeed = $( "#rotateSpeedSlider" ).slider( "value" ),
+	viewAngle = $( "#viewAngleSlider" ).slider( "value" );
+    // Send to "sendDataTEST" for testing
+$.get( "sendData", { "messageForRobot": JSON.stringify({"travelSpeed":travelSpeed,"rotateSpeed":rotateSpeed,"viewAngle":viewAngle})})
+    .done(function () {
+        $('span#dataSent').html("Sent");
+})
+    .fail(function () {
+        $('span#dataSent').html("FAILED");
+    });
+};
+
+/* Ideas for how to get date/time from JavaScript:
+// For todays date;
+Date.prototype.today = function () { 
+    return (["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][(this).getDay()]) + " " + ((this.getDate() < 10)?"0":"") + this.getDate() +"/"+(((this.getMonth()+1) < 10)?"0":"") + (this.getMonth()+1) +"/"+ this.getFullYear();
+}
+
+// For the time now
+Date.prototype.timeNow = function () {
+     return ((this.getHours() < 10)?"0":"") + this.getHours() +":"+ ((this.getMinutes() < 10)?"0":"") + this.getMinutes() +":"+ ((this.getSeconds() < 10)?"0":"") + this.getSeconds();
+}
+*/
+// For Date/Time string similar to Java's
+Date.prototype.localTime = function () { 
+    return (["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][(this).getDay()]) + " " + (["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][(this).getMonth()]) + " " + this.getDate() + " " + ((this.getDate() < 10)?"0":"") + ((this.getHours() < 10)?"0":"") + this.getHours() +":"+ ((this.getMinutes() < 10)?"0":"") + this.getMinutes() +":"+ ((this.getSeconds() < 10)?"0":"") + this.getSeconds() + " " + this.getFullYear();
+}
+// Note I cannot get the cute "CDT"/ "CST" in JavaScript without a lot of work.
+// I should eventually modify the Java date output to be something more easily obtained in JavaScript
+
+// Connect Button update Function
+			var updateConnectedButton = function() {
+            if (connectedToNXT) {
+            if (connectButtonHovered) {
+            $('#connectButton-li').css('background-color','#882211');
+            $('span#connectText').html("DISCONNECT?");
+            } else {
+            $('span#connectText').html("CONNECTED");
+            $('#connectButton-li').css('background-color','#3366FF');
+            $('#connectButton-li').css('letter-spacing','1px');
+            }
+            } else {
+            if (connectRequested) {
+            $('span#connectText').html("CONNECTING");
+            $('#connectButton-li').css('background-color','#BBAA55');
+            $('#connectButton-li').css('letter-spacing','1px');
+            } else {
+            if (connectButtonHovered) {
+            $('#connectButton-li').css('background-color','#5599FF');
+            $('span#connectText').html("CONNECT?");
+            } else {
+            $('span#connectText').html("NOT CONNECTED");
+            $('#connectButton-li').css('background-color','#FF9900');
+            $('#connectButton-li').css('letter-spacing','0');
+            }
+            }
+			}
+            };
+
+// Status poll function
+// Reference: http://stackoverflow.com/questions/1740218/error-handling-in-getjson-calls
+// NOTE: Sometimes this quits, and I'm not sure why yet. Need to debug that.
+// the only fix is an F5 refresh.
+			var pollStatus = function() {
+				$( "#statusLight" ).toggle( "fade" );
+				//console.log("1");
+				$.getJSON('status.json', function (e) {
+                        })
+                        .done(function(e) {
+						//console.log("2");
+					$('span#distanceCenter').html(e.distanceCenter);
+					$('span#distanceLeft').html(e.distanceLeft);
+					$('span#distanceRight').html(e.distanceRight);
+					$('span#Heading').html(e.Heading);
+					$('span#travelSpeed').html(e.travelSpeed);
+					$('span#rotateSpeed').html(e.rotateSpeed);
+					$('span#viewAngle').html(e.viewAngle);
+					$('span#serverTime').html(e.serverTime);
+                    $('span#refreshInterval').html(refreshInterval); // NOT from status.json, this is set in config.json
+                    $('span#connectRequested').html(e.connectRequested);
+                    $('span#connectedToNXT').html(e.connectedToNXT);
+                    $('span#isDoing').html(e.isDoing);
+                    $('span#lastResult').html(e.lastResult);
+                    $('span#tilt').html(e.tilt);
+                    $('#upper-side-panel').find('li:first').css('background-color','rgb(204, 221, 255)');
+                    $('span#onlinestatus').html("ONLINE");
+                    connectRequested = e.connectRequested;
+                    connectedToNXT = e.connectedToNXT;
+                    updateConnectedButton();
+					//console.log("3");
+                })
+                    .fail(function() {
+                    $('span#onlinestatus').html("OFFLINE");
+                    $('#upper-side-panel').find('li:first').css('background-color','#882211');
+                    $('span#connectText').html("NO STATUS");
+                    $('#connectButton-li').css('background-color','#FF9900');
+
+                })
+                    .always(function() {
+					//console.log("4");
+                    // Example:
+                    //var datetime = "LastSync: " + new Date().today() + " @ " + new Date().timeNow();
+                    var datetime = new Date().localTime();
+                    $('span#yourTime').html(datetime);
+					setTimeout(pollStatus, refreshInterval);
+					//console.log("5");
+				});
+				$( "#statusLight" ).toggle( "fade" );
+				//console.log("6");
+			};
+	</script>
+</head>
+<body>
+<ul id="upper-side-panel" class="upper-side-panel">
+        <li style="height: 141px; background-color: rgb(204, 221, 255);"><div style="line-height: 260px; font-size: 20px;"><span id="onlinestatus" style="padding-right:2px"></span></div></li>
+        <li id="connectButton-li" style="height: 47px; background-color:#FF9900; margin-bottom: 0;"><span style="padding-right:2px"><a class="connectButton"><span id="connectText" >NO STATUS</span></a></span></li>
+	</ul>
+	<div id="upper-content">
+		<div id="up-header">
+			<h1>HOUSE BOT</h1>
+		</div>
+		<div id="up-text">
+			<p>Use F11 for full screen.</p>
+		</div>
+        <div id="data-table" style="margin-left: 150px;">
+        <table style="width: 100%; border-spacing: 0;">
+        <!-- Set border="1" to debug table -->
+        <!-- The table should fill the space but ultimately align right with space on the left corresponding to the elbow -->
+		<tr>
+            <td style="width:15%; color: #FF9900">DISTANCE</td>
+            <td style="width:5%"></td>
+            <td style="width:5%"></td>
+			<td style="width:10%; color: #FF9900">Response:</td>
+            <td style="width:12%"><span id='response' style="color: #CCDDFF"></span></td>
+            <td style="width:3%"></td>
+            <td style="width:12%">isDoing</td>
+            <td style="width:10%"><span id='isDoing'></span></td>
+            <td style="width:3%"></td>
+			<td style="width:15%; color: #FF9900">Android Time:</td>
+            <td style="width:10%; color: #FF9900; white-space: nowrap;"><span id='serverTime' style="color: #FF9900"></span></td>
+         </tr>
+         <tr>
+			<td>Forward:</td>
+            <td><span id='distanceCenter'></span></td>
+            <td></td>
+			<td>Heading:</td>
+            <td><span id='Heading'></span></td>
+            <td></td>
+            <td>lastResult</td>
+            <td><span id='lastResult'></span></td>
+            <td></td>
+            <td style="color: #FF9900">Your Time:</td>
+            <td><span id='yourTime' style="color: #FF9900"></span></td>
+         </tr>
+         <tr>
+			<td>Left:</td>
+            <td><span id='distanceLeft'></span></td>
+            <td></td>
+			<td>Speed:</td>
+            <td><span id='travelSpeed'></span></td>
+            <td></td>
+            <td>tilt</td>
+            <td><span id='tilt'></span></td>
+            <td></td>
+            <td>Refresh:</td>
+            <td><span id='refreshInterval'></span></td>
+         </tr>
+         <tr>
+			<td>Right:</td>
+            <td><span id='distanceRight'></span></td>
+            <td></td>
+			<td>Rotation:</td>
+            <td><span id='rotateSpeed'></span></td>
+            <td></td>
+			<td>View Angle:</td>
+            <td><span id='viewAngle'></span></td>
+            <td></td>
+            <td>Mode:</td>
+            <td><span id='configMode'></span></td>
+         </tr>
+         <tr>
+			<td>connectRequested:</td>
+            <td><span id='connectRequested'></span></td>
+            <td></td>
+			<td>connectedToNXT:</td>
+            <td><span id='connectedToNXT'></span></td>
+            <td></td>
+			<td>Data Sent</td>
+            <td><span id='dataSent'>N/A</span></td>
+            <td></td>
+            <td>5092</td>
+            <td><span id='5092'>Output</span></td>
+         </tr>
+         </table>
+         </div>
+	</div>
+    <div class="line-middle" ><div class="top" style="background-color:#3366FF;">&nbsp;</div><div class="bottom" style="background-color:#CCDDFF;"></div></div>
+<ul id="lower-side-panel" class="lower-side-panel">
+        <li id="pingButton-li" style="height: 94px; background-color: rgb(204, 221, 255);"><div style="line-height: 166px;"><span style="padding-right:2px"><a class="pingButton">PING</a></span></div></li>
+        <li id="proceedButton-li" style="height: 30px; background-color: rgb(51, 102, 255);"><span style="padding-right:2px"><a class="proceedButton">PROCEED</a></span></li>
+        <li id="cameraButton-li" style="height: 30px; background-color: rgb(204, 221, 255);"><span style="padding-right:2px"><a class="cameraButton">CAMERA</a></span></li>
+        <li id="staycloseButton-li" style="height: 30px; background-color: rgb(51, 102, 255);"><span style="padding-right:2px"><a class="staycloseButton">STAY CLOSE</a></span></li>
+        <li id="resetButton-li" style="height: 240px; border-bottom-style: none; background-color: rgb(204, 221, 255);"><span style="padding-right:2px"><a class="resetButton">RESET</a></span></li>
+	</ul>
+	<div id="lower-content" class="lower-content" style="margin-left:87px;">
+    <div id="left-lower-content-box" style="float:left;">
+		<div id="statusLight"></div>
+             <table>
+             <tr>
+             <td></td>
+             <td>
+			<a class='forwardButton'>Forward</a>
+            </td>
+            <td></td>
+            </tr>
+            <tr>
+            <td>
+			<a class='leftButton'>Left</a>
+            </td>
+            <td>
+			<a class='stopButton'>Stop</a>
+            </td>
+            <td>
+			<a class='rightButton'>Right</a>
+            </td>
+            </tr>
+            <tr>
+            <td></td>
+            <td>
+			<a class='reverseButton'>Reverse</a>
+            </td>
+            <td></td>
+            </tr>
+            </table><br />
+            <div id="middle-lower-content-box" style="float:left; margin:20px;">
+Travel Speed: 
+<div id="travelSpeedSlider"></div>
+Rotate Speed:
+<div id="rotateSpeedSlider"></div>
+View Angle:
+<div id="viewAngleSlider"></div>
+</div>
+            </div>
+		<div id="mainViewscreenBox" style="float:left;text-align:center; border:1px solid; border-color:#5599FF; width: 640px; margin: 10px">
+			        <img id="videoFeed" alt="Video feed" src="http://192.168.1.95:8080/video" width="640" height="480" />
+                    <!-- Video image is 640x480 so use that size for a "filler" image if need be -->
+			<br />
+			<h3>Main Viewscreen</h3>
+		</div>
+	</div>
+</body>
+</html>

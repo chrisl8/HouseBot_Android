@@ -1,0 +1,361 @@
+/*
+Taken from LCARS Framework jQuery Plugin v2.0
+Credit: Josh Messer @ http://lcars.ws/lcarsdist/
+http://www.lcars47.com/p/lcars-101.html
+Last column, Star Trek: Nemesis colors
+Modeling color after this picture from  Star Trek: Nemesis:
+http://upload.wikimedia.org/wikipedia/en/4/4b/Enterprise-E_LCARS.jpg
+The LCARS jQuery system uses ten colors, but there are only 8 in the pallet
+Also, I'm resorting these to match the list
++--------------------------+
+| LCARS COLOR TABLE        |
++--------------------------+
+This should be replicated in lcars.js
+@white: #CCDDFF;
+@lightBlue: #5599FF;
+@lightTan: #3366FF;  /* Less Light Blue
+@pink: #cc6699; /* Extra Color, from TNG later series (2nd column)
+@lightRed: #cc6666; /* Extra Color, from TNG later series (2nd column)
+@blue: #0011EE;
+@purple: #000088;
+@tan: #BBAA55;
+@orange: #BB4411;
+@red: #882211;
+*/
+@font-face {
+	/* This declaration targets Internet Explorer */
+	font-family: 'lcars_font';
+	src: url('lcars-webfont.eot');
+}
+@font-face {
+	/* This declaration targets everything else */
+	font-family: 'lcars_font';
+	src: url(//:) format('no404'), url('lcars-webfont.woff') format('woff'), url('lcars-webfont.ttf') format('truetype'), url('lcars-webfont.svg#webfontMzhP0WIg') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+html, body{
+/* Text Selection turned off to make it more like a user interface!
+   http://stackoverflow.com/questions/12315476/how-to-disable-selection-of-text-on-a-web-page */
+  -webkit-user-select: none;
+     -moz-user-select: -moz-none;
+      -ms-user-select: none;
+/*          user-select: none; /* May be deprecated? Does not validate*/
+	background-color:#000;
+	color:#fff;
+	margin:0;
+	padding:0;
+	font-family:lcars_font;
+	font-size:25px;
+	font-weight:normal;
+/* Prevents double scroll bars */
+/* syle="ovrerflow: hidden" will prevent any scroll bars on the browser. */
+	overflow:hidden;
+/* This helps to make the text easy to read. */
+	letter-spacing: 1px;  
+}
+h1{ font-weight:normal;
+    margin:0;
+    padding:0;
+    margin-top: -8px;
+    margin-bottom: -10px;
+}
+h2{font-size: 35px;font-weight:normal;margin:0;padding:0;}
+h3{font-size: 30px;font-weight:normal;margin:0;padding:0;}
+
+a:link, a:visited{
+	color:#aaF;
+	text-decoration:none;
+}
+a:hover{
+	color:#66F;
+	text-decoration:none;
+    /* No hand pointer, to make it look more like an app or interface */
+    cursor: default;
+}
+
+/* LINE STYLEING */
+.line-middle{
+	width:100%;
+	height:50px;
+	top:0;
+	left:0;
+	margin:0;
+	background-color:transparent;
+}
+.line-middle .top{
+	height:25px;
+	width:100%;
+	margin:0;
+	background-image: url(line.png);
+	background-repeat: no-repeat;
+	background-position:0 0;
+}
+.line-middle .bottom{
+	height:25px;
+	width:100%;
+	margin:0;
+	background-image: url(line.png);
+	background-repeat: no-repeat;
+	background-position:0 -31px;
+}
+/* // LINE STYLEING */
+
+/* CONTENT AND SIDE PANELS */
+#up-header{
+	margin:0;
+	padding:0;
+	float:right;
+	text-align:right;
+}	
+#up-header h1{
+		color: #5599FF;
+	}
+#up-text{
+	margin:0;
+	padding:0;
+	text-align:left;
+	}
+#up-text p{
+		margin:0 10px;
+		padding:0;
+		color: #BB4411;
+	}
+#content h3 {
+		color: #BBAA55;
+	}
+#content h2 {
+		color: #BB4411;
+	}
+.content{
+	background:transparent;
+	position:relative;
+	margin:0;
+	padding:0;
+}
+.upper-content{
+	width:auto;
+	height:auto;
+	overflow:auto;
+	background:transparent;
+	float:left;
+	position:relative;
+}
+.upper-side-panel{
+	color:black;
+	width:87px;
+	background:transparent;
+	margin:0;
+	padding:0;
+	list-style-type:none;
+	float:left;
+}
+
+.upper-side-panel li{
+	height:auto;
+	width:100%;
+	text-align:right;
+	border-bottom:2px solid black;
+	margin:0;
+	padding:0;
+}
+
+.upper-side-panel a{
+	color:black;
+	text-decoration:none;
+	font-family:lcars_font;
+	font-size:15px;
+	font-size:20px;
+}
+.lower-side-panel{
+	color:black;
+	width:87px;
+	background:transparent;
+	margin:0;
+	padding:0;
+	list-style-type:none;
+	float:left;
+}
+
+.lower-side-panel li{
+	height:auto;
+	width:100%;
+	text-align:right;
+	border-bottom:2px solid black;
+	margin:0;
+	padding:0;
+}
+
+.lower-side-panel a{
+	color:black;
+	text-decoration:none;
+	font-family:lcars_font;
+	font-size:15px;
+	font-size:20px;
+}
+#upper-content,table { color: #5599ff; }
+/* // CONTENT AND SIDE PANEL */
+
+/* MEDIA STYLING FOR SMALL SCREENS */
+@media screen and (max-width:400px) {
+	body{font-family:verdana;font-size:12px;}
+	h1{font-size: 26px;}
+	h2{font-size: 22px;}
+	h3{font-size: 18px;}
+	.line-top, .line-bottom, .line-middle{display:none;}
+	.side-panel{width:100%;}
+	.side-panel li{height:25px!important;text-align:center;margin:0!important;}
+	.side-panel li div{line-height:20px!important;}
+	.content, .upper-content{width:100%!important;height:auto!important;}
+	a.lcars-debug{position:relative;display:none!important;}
+	div.lcars-debug{position:relative;}
+	.button{font-size:12px!important;}
+	.B_titleR, .B_titleL{font-size:12px!important;line-height:35px;}
+}
+/* // MEDIA STYLING FOR SMALL SCREENS */
+
+/* BUTTON STYLING */
+.button{
+display:block;
+height: 30px;
+width:75px;
+color:black;
+padding: 0.3em 1em;
+background-color:#ffcc00;
+font-size: 20px;
+line-height:30px;
+text-decoration:none;
+text-align:right;
+overflow:hidden;
+cursor:pointer;
+border:none;
+}
+.B_titleR{
+display:block;
+float:right;
+height:40px;
+line-height:40px;
+color:#FFCC00;
+font-size:32px;
+background:#000;
+padding:2px;
+margin-top:-0.2em;
+}
+.B_titleL{
+display:block;
+float:left;
+height:40px;
+line-height:40px;
+color:#FFCC00;
+font-size:32px;
+background:#000;
+padding:2px;
+margin-top:-0.2em;
+}
+
+.B_blankL{
+color:#000;
+background:#000;
+display:block;
+padding:10px;
+height:40px;
+margin-top:-0.3em;
+margin-left:0em;
+width:100%;
+}
+.B_blankR{
+color:#000;
+background:#000;
+display:block;
+padding:10px;
+height:40px;
+margin-top:-0.3em;
+margin-left:-1em;
+width:100%;
+}
+.RR{border-radius:20px;-moz-border-radius:20px;-webkit-border-radius:20px;}
+.SR{-moz-border-radius-topright:20px;-moz-border-radius-bottomright:20px;-webkit-border-top-right-radius:20px;-webkit-border-bottom-right-radius:20px;}
+.RS{-moz-border-radius-topleft:20px;-moz-border-radius-bottomleft:20px;-webkit-border-top-left-radius:20px;-webkit-border-bottom-left-radius:20px;}
+.L{width:100px;}
+.B_title a:link, .B_title a:visited, .B_title a:hover{color:#fc0;text-decoration:none;}
+.button a:link, .button a:visited, .button a:hover{color:black;text-decoration:none!important;}
+a.button:link, a.button:visited, a.button:hover{color:black;text-decoration:none!important;}
+/* // BUTTON STYLING */
+
+/* INPUT STYLING */
+input{
+	background:transparent;
+	color: white;
+	padding:0;
+	margin:0;
+	font-size:25px;
+	border:2px solid #ff9900;
+	font-family:lcars_font;
+	padding:0 5px;
+	cursor:pointer;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	-o-border-radius: 5px;
+	border-radius: 5px;
+}
+input:focus{
+	background:#ff9900;
+	color:black;
+}
+input[type=button], input[type=submit], button{
+	background:#ff9900;
+	font-family:lcars_font;
+	font-size:25px;
+	height:35px;
+	line-height:35px;
+	border:none;
+	text-align:right;
+	color:black;
+	padding-left:2em;
+	padding-right:1em;
+	-webkit-border-radius: 15px;
+	-moz-border-radius: 15px;
+	-o-border-radius: 15px;
+	border-radius: 15px;
+}
+input[type=button]:hover, input[type=submit]:hover, button:hover{
+	-webkit-border-radius: 30px;
+	-moz-border-radius: 30px;
+	-o-border-radius: 30px;
+	border-radius: 30px;
+}
+/* FOR JAVASCRIPT CHANGES */
+.lightUpButton { background-color: #5599FF !important; }
+.pressOnButton { background-color: #000088 !important; }
+.highlight{
+	background-color:#cc6666;
+	padding:2px;
+/*	.rounded(10px); /* Not sure what this is for */
+}	
+.highlight .highlight-inner{
+		background-color:#cc6666;
+		border:2px solid black;
+		padding:2px;
+/*		.rounded(10px);  /* Not sure what this is for */
+	}
+/* Sliders */
+#travelSpeedSlider, #rotateSpeedSlider, #viewAngleSlider{
+    width: 380px;
+    margin: 0 0 20px 0;
+    font-size: 10px;
+}
+#travelSpeedSlider .ui-slider-range { background: #3366FF; }
+#travelSpeedSlider .ui-slider-handle { border-color: #BBAA55; }
+#rotateSpeedSlider .ui-slider-range { background: #0011EE; }
+#rotateSpeedSlider .ui-slider-handle { border-color: #BBAA55; }
+#viewAngleSlider .ui-slider-range { background: #000088; }
+#viewAngleSlider .ui-slider-handle { border-color: #BBAA55; }
+#statusLight {
+    width: 10px;
+    height: 10px;
+    background: #007927;
+	border-radius: 5px;
+	position: absolute;
+margin: 10px;
+}
